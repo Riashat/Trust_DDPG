@@ -92,6 +92,10 @@ class DDPG(object):
 			done = var(torch.FloatTensor(1 - d))
 			reward = var(torch.FloatTensor(r))
 
+
+			"""
+			Critic update
+			"""
 			# Q target = reward + discount * Q(next_state, pi(next_state))
 			target_Q = self.critic_target(next_state, self.actor_target(next_state))
 			target_Q.volatile = False 
@@ -99,11 +103,13 @@ class DDPG(object):
 
 			# Get current Q estimate
 			current_Q = self.critic(state, action)
-
-			## Add regularizer for critic
-			#critic_regularizer = nn.MSELoss(current_Q, target_Q)
-			critic_regularizer = self.criterion(current_Q, target_Q)
 			critic_mse = self.criterion(current_Q, target_Q)
+
+			# target_Q_current_state = Variable(target_Q.data, requires_grad = True)
+			target_Q_current_state = self.critic_target(state, self.actor(state))
+			target_Q_current_state.volatile = False
+
+			critic_regularizer = self.criterion(current_Q, target_Q_current_state)
 
 			# Compute critic total loss
 			critic_loss = critic_mse + lambda_critic * critic_regularizer
@@ -113,7 +119,11 @@ class DDPG(object):
 			critic_loss.backward()
 			self.critic_optimizer.step()
 
-			target_actor = self.actor_target(next_state)
+
+			"""
+			Actor update
+			"""
+			target_actor = self.actor_target(state)
 			target_actor.volatile = False
 			current_actor = self.actor(state)
 
@@ -122,7 +132,6 @@ class DDPG(object):
 
 			# Compute actor total loss
 			actor_loss = actor_original_loss + lambda_actor * actor_regularizer
-
 
 			self.actor_optimizer.zero_grad()
 			actor_loss.backward()
