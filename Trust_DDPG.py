@@ -105,16 +105,8 @@ class DDPG(object):
 			critic_regularizer = self.criterion(current_Q, target_Q)
 			critic_mse = self.criterion(current_Q, target_Q)
 
-			"""
-			TODO : Add lambda trade-off term
-			"""
-
-			import pdb; pdb.set_trace()
-
-			
+			# Compute critic total loss
 			critic_loss = critic_mse + lambda_critic * critic_regularizer
-			# Compute critic loss
-			# critic_loss = self.criterion(current_Q, target_Q)
 
 			# Optimize the critic
 			self.critic_optimizer.zero_grad()
@@ -128,6 +120,7 @@ class DDPG(object):
 			actor_regularizer = self.criterion(current_actor, target_actor)
 			actor_original_loss = -self.critic(state, self.actor(state)).mean()			
 
+			# Compute actor total loss
 			actor_loss = actor_original_loss + lambda_actor * actor_regularizer
 
 
