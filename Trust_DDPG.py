@@ -98,8 +98,9 @@ class DDPG(object):
 			"""
 			# Q target = reward + discount * Q(next_state, pi(next_state))
 			target_Q = self.critic_target(next_state, self.actor_target(next_state))
-			target_Q.volatile = False 
+			#target_Q.volatile = False 
 			target_Q = reward + (done * discount * target_Q)
+			target_Q.volatile = False 
 
 			# Get current Q estimate
 			current_Q = self.critic(state, action)
@@ -107,6 +108,7 @@ class DDPG(object):
 
 			# target_Q_current_state = Variable(target_Q.data, requires_grad = True)
 			target_Q_current_state = self.critic_target(state, self.actor(state))
+			target_Q_current_state = Variable(target_Q_current_state.data)
 			target_Q_current_state.volatile = False
 
 			critic_regularizer = self.criterion(current_Q, target_Q_current_state)
@@ -124,6 +126,7 @@ class DDPG(object):
 			Actor update
 			"""
 			target_actor = self.actor_target(state)
+			target_actor = Variable(target_actor.data)
 			target_actor.volatile = False
 			current_actor = self.actor(state)
 
