@@ -92,7 +92,6 @@ class DDPG(object):
 			done = var(torch.FloatTensor(1 - d))
 			reward = var(torch.FloatTensor(r))
 
-
 			"""
 			Critic update
 			"""
@@ -121,6 +120,11 @@ class DDPG(object):
 			critic_loss.backward()
 			self.critic_optimizer.step()
 
+			##for analysing regularisation
+			loss_critic_regularizer = critic_regularizer.data.numpy()
+			loss_critic_mse = critic_mse.data.numpy()
+			loss_critic = critic_loss.data.numpy()
+
 
 			"""
 			Actor update
@@ -140,12 +144,20 @@ class DDPG(object):
 			actor_loss.backward()
 			self.actor_optimizer.step()
 
+			##for analysing actor regularisation
+			loss_actor_original = actor_original_loss.data.numpy()
+			loss_actor_regularizer = actor_regularizer.data.numpy()
+			loss_actor = actor_loss.data.numpy()
+
+
 			# Update the frozen target models
 			for param, target_param in zip(self.critic.parameters(), self.critic_target.parameters()):
 				target_param.data.copy_(tau * param.data + (1 - tau) * target_param.data)
 
 			for param, target_param,  in zip(self.actor.parameters(), self.actor_target.parameters()):
 				target_param.data.copy_(tau * param.data + (1 - tau) * target_param.data)
+
+		return loss_critic_regularizer, loss_critic_mse, loss_critic, loss_actor_regularizer, loss_actor_original, loss_actor
 
 
 	def save(self, filename, directory):

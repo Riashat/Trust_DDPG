@@ -56,12 +56,15 @@ if __name__ == "__main__":
 	args = parser.parse_args()
 
 	file_name = "%s_%s_%s_%s_%s" % (args.policy_name, args.env_name, args.lambda_critic, args.lambda_actor, str(args.seed))
+	# error_values = "%s_%s_%s_%s_%s" % (args.policy_name, args.env_name, args.lambda_critic, args.lambda_actor, str(args.seed))
 	print ("---------------------------------------")
 	print ("Settings: %s" % (file_name))
 	print ("---------------------------------------")
 
 	if not os.path.exists("./results"):
 		os.makedirs("./results")
+	if not os.path.exists("./results_error_values"):
+		os.makedirs("./results_error_values")
 	if args.save_models and not os.path.exists("./pytorch_models"):
 		os.makedirs("./pytorch_models")
 
@@ -91,6 +94,14 @@ if __name__ == "__main__":
 	episode_num = 0
 	done = True 
 
+	loss_critic_regularizer = np.array([])
+	loss_critic_mse = np.array([])
+	loss_critic = np.array([])
+	loss_actor_regularizer = np.array([])
+	loss_actor_original = np.array([])
+	loss_actor = np.array([])
+
+
 	while total_timesteps < args.max_timesteps:
 		
 		if done: 
@@ -100,8 +111,16 @@ if __name__ == "__main__":
 				if args.policy_name == "DDPG":
 					policy.train(replay_buffer, episode_timesteps, args.batch_size, args.discount, args.tau)
 				elif args.policy_name == "Trust_DDPG":
-					policy.train(replay_buffer, episode_timesteps, args.batch_size, args.discount, args.tau, args.lambda_critic, args.lambda_actor)
-			
+					lcr, lcm, lc, lar, lao, la = policy.train(replay_buffer, episode_timesteps, args.batch_size, args.discount, args.tau, args.lambda_critic, args.lambda_actor)
+					
+					loss_critic_regularizer = np.append(loss_critic_regularizer, lcr, axis=0)
+					loss_critic_mse = np.append(loss_critic_mse, lcm, axis=0)
+					loss_critic = np.append(loss_critic, lc, axis=0)
+					loss_actor_regularizer = np.append(loss_actor_regularizer, lar, axis=0)
+					loss_actor_original = np.append(loss_actor_original, lao, axis=0)
+					loss_actor = np.append(loss_actor, la, axis=0)
+
+
 			# Evaluate episode
 			if timesteps_since_eval >= args.eval_freq:
 				timesteps_since_eval %= args.eval_freq
@@ -139,8 +158,16 @@ if __name__ == "__main__":
 		episode_timesteps += 1
 		total_timesteps += 1
 		timesteps_since_eval += 1
+
 		
 	# Final evaluation 
 	evaluations.append(evaluate_policy(policy))
 	if args.save_models: policy.save("%s" % (file_name), directory="./pytorch_models")
-	np.save("./results/%s" % (file_name), evaluations)  
+	np.save("./results/%s" % (file_name), evaluations)
+	np.save("./results_error_values/" + "lcr_" + "%s" % (file_name), loss_critic_regularizer)
+	np.save("./results_error_values/" + "lcm_" + "%s" % (file_name), loss_critic_mse)
+	np.save("./results_error_values/" + "lc_" + "%s" % (file_name), loss_critic)
+	np.save("./results_error_values/" + "lar_" + "%s" % (file_name), loss_actor_regularizer)
+	np.save("./results_error_values/" + "lao_" + "%s" % (file_name), loss_actor_original)
+	np.save("./results_error_values/" + "la_" + "%s" % (file_name), loss_actor)
+
