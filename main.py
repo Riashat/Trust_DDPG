@@ -55,7 +55,7 @@ if __name__ == "__main__":
 
 	args = parser.parse_args()
 
-	file_name = "%s_%s_%s" % (args.policy_name, args.env_name, str(args.seed))
+	file_name = "%s_%s_%s_%s_%s" % (args.policy_name, args.env_name, args.lambda_critic, args.lambda_actor, str(args.seed))
 	print ("---------------------------------------")
 	print ("Settings: %s" % (file_name))
 	print ("---------------------------------------")
