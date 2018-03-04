@@ -116,9 +116,9 @@ class DDPG(object):
 			self.critic_optimizer.step()
 
 			##for analysing regularisation
-			loss_critic_regularizer = critic_regularizer.data.numpy()
-			loss_critic_mse = critic_mse.data.numpy()
-			loss_critic = critic_loss.data.numpy()
+			loss_critic_regularizer = critic_regularizer.data.cpu().numpy()
+			loss_critic_mse = critic_mse.data.cpu().numpy()
+			loss_critic = critic_loss.data.cpu().numpy()
 
 
 			"""
@@ -140,9 +140,9 @@ class DDPG(object):
 			self.actor_optimizer.step()
 
 			##for analysing actor regularisation
-			loss_actor_original = actor_original_loss.data.numpy()
-			loss_actor_regularizer = actor_regularizer.data.numpy()
-			loss_actor = actor_loss.data.numpy()
+			loss_actor_original = actor_original_loss.data.cpu().numpy()
+			loss_actor_regularizer = actor_regularizer.data.cpu().numpy()
+			loss_actor = actor_loss.data.cpu().numpy()
 
 
 			# Update the frozen target models
