@@ -7,11 +7,6 @@ import torch.nn.functional as F
 import utils
 
 
-# Implementation of Deep Deterministic Policy Gradients (DDPG)
-# Paper: https://arxiv.org/abs/1509.02971
-# [Not the implementation used in the TD3 paper]
-
-
 def var(tensor, volatile=False):
 	if torch.cuda.is_available():
 		return Variable(tensor, volatile=volatile).cuda()
