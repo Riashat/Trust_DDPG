@@ -36,7 +36,7 @@ if __name__ == "__main__":
 	"""
 
 	parser = argparse.ArgumentParser()
-	parser.add_argument("--policy_name", default="Trust_DDPG")					# Policy name
+	parser.add_argument("--policy_name", default="Trust_DDPG")			# Policy name
 	parser.add_argument("--env_name", default="HalfCheetah-v1")			# OpenAI gym environment name
 	parser.add_argument("--seed", default=0, type=int)					# Sets Gym, PyTorch and Numpy seeds
 	parser.add_argument("--start_timesteps", default=1e4, type=int)		# How many time steps purely random policy is run for
@@ -83,6 +83,7 @@ if __name__ == "__main__":
 	# Initialize policy
 	if args.policy_name == "DDPG": policy = DDPG.DDPG(state_dim, action_dim, max_action)
 	elif args.policy_name == "Trust_DDPG": policy = Trust_DDPG.DDPG(state_dim, action_dim, max_action)
+	elif args.policy_name == "Trust_DDPG_Adaptive": policy = Trust_DDPG.DDPG(state_dim, action_dim, max_action)
 
 	replay_buffer = utils.ReplayBuffer()
 	
@@ -112,7 +113,10 @@ if __name__ == "__main__":
 					policy.train(replay_buffer, episode_timesteps, args.batch_size, args.discount, args.tau)
 				elif args.policy_name == "Trust_DDPG":
 					lcr, lcm, lc, lar, lao, la = policy.train(replay_buffer, episode_timesteps, args.batch_size, args.discount, args.tau, args.lambda_critic, args.lambda_actor)
-					
+				elif args.policy_name == "Trust_DDPG_Adaptive":
+					lcr, lcm, lc, lar, lao, la = policy.train_with_adaptive_lambda(replay_buffer, episode_timesteps, args.batch_size, args.discount, args.tau, args.lambda_critic, args.lambda_actor)
+
+
 					loss_critic_regularizer = np.append(loss_critic_regularizer, lcr, axis=0)
 					loss_critic_mse = np.append(loss_critic_mse, lcm, axis=0)
 					loss_critic = np.append(loss_critic, lc, axis=0)
