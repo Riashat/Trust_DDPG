@@ -23,12 +23,16 @@ l_0p001 = np.mean(np.array([l_0p001_1, l_0p001_2]),axis=0)
 l_0p001_var = np.std(np.array([l_0p001_1, l_0p001_2]),axis=0)
 
 
+l_0p01 = np.load('./results/Trust_DDPG_HalfCheetah-v1_0.01_0.01_0.npy')
+
+
 l_0p05_1 = np.load('./results/Trust_DDPG_HalfCheetah-v1_0.05_0.05_0.npy')
 l_0p05_2 = np.load('./results/Trust_DDPG_HalfCheetah-v1_0.05_0.05_1.npy')
 
 l_0p05 = np.mean(np.array([l_0p05_1, l_0p05_2]),axis=0)
 l_0p05_var = np.std(np.array([l_0p05_1, l_0p05_2]),axis=0)
 
+l_0p075 = np.load('./results/Trust_DDPG_HalfCheetah-v1_0.075_0.075_0.npy')
 
 l_0p1_1 = np.load('./results/Trust_DDPG_HalfCheetah-v1_0.1_0.1_0.npy')
 l_0p1_2 = np.load('./results/Trust_DDPG_HalfCheetah-v1_0.1_0.1_1.npy')
@@ -125,13 +129,13 @@ def plot_results(stats1, stats2, stats3, stats4, stats5, stats6, smoothing_windo
     cum_rwd_1, = plt.plot(eps, rewards_smoothed_1, color = "red", linewidth=2.5, linestyle='solid', label="Regularizer, lambda = 0.001")    
     #plt.fill_between( eps, rewards_smoothed_1 + l_0p05_var,   rewards_smoothed_1 - l_0p001_var, alpha=0.2, edgecolor='red', facecolor='red')
 
-    cum_rwd_2, = plt.plot(eps, rewards_smoothed_2, color = "blue", linewidth=2.5, linestyle='dashed', label="Regularizer, lambda = 0.05" )  
+    cum_rwd_2, = plt.plot(eps, rewards_smoothed_2, color = "blue", linewidth=2.5, linestyle='dashed', label="Regularizer, lambda = 0.01" )  
     #plt.fill_between( eps, rewards_smoothed_2 + l_0p05_var,   rewards_smoothed_2 - l_0p05_var, alpha=0.2, edgecolor='blue', facecolor='blue')
 
-    cum_rwd_3, = plt.plot(eps, rewards_smoothed_3, color = "black", linewidth=2.5, linestyle='dashdot', label="Regularizer, lambda = 0.1" )  
+    cum_rwd_3, = plt.plot(eps, rewards_smoothed_3, color = "black", linewidth=2.5, linestyle='dashdot', label="Regularizer, lambda = 0.05" )  
     #plt.fill_between( eps, rewards_smoothed_3 + l_0p1_var,   rewards_smoothed_3 - l_0p1_var, alpha=0.2, edgecolor='black', facecolor='black')
 
-    cum_rwd_4, = plt.plot(eps, rewards_smoothed_4, color = "green", linewidth=2.5, linestyle='dashdot', label="Regularizer, lambda = 0.5" )  
+    cum_rwd_4, = plt.plot(eps, rewards_smoothed_4, color = "green", linewidth=2.5, linestyle='dashdot', label="Regularizer, lambda = 0.075" )  
     #plt.fill_between( eps, rewards_smoothed_3 + l_0p1_var,   rewards_smoothed_3 - l_0p1_var, alpha=0.2, edgecolor='black', facecolor='black')
 
     cum_rwd_5, = plt.plot(eps, rewards_smoothed_5, color = "yellow", linewidth=2.5, linestyle='dashdot', label="Regularizer, lambda = 1.0" )  
@@ -154,7 +158,7 @@ def plot_results(stats1, stats2, stats3, stats4, stats5, stats6, smoothing_windo
 
 def main():
    #comparison_plot(l_0p001, l_0p05, l_0p1, l_0p5, l_1, ddpg)
-   plot_results(l_0p001, l_0p05, l_0p1, l_0p5, l_1, ddpg)
+   plot_results(l_0p001, l_0p01, l_0p05, l_0p075, l_1, ddpg)
 
 if __name__ == '__main__':
     main()
