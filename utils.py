@@ -68,7 +68,7 @@ def get_parser():
 
       named_args.add_argument('--save_models', '--save_models',
             help="""# Whether or not models are saved""",
-            action="store_true")
+            type=bool,default=True)
 
       named_args.add_argument('--expl_noise', '--expl_noise',
             help="""# Std of Gaussian exploration noise""",
