@@ -6,6 +6,7 @@ import os
 
 import utils
 import Trust_DDPG
+import Trust_Ensemble_DDPG
 import DDPG
 
 
@@ -31,32 +32,25 @@ def evaluate_policy(policy, eval_episodes=10):
 
 if __name__ == "__main__":
 	
-	"""
-	Need an argument here for "lambda" term - lambda_actor, lambda_critic
-	"""
 
-	parser = argparse.ArgumentParser()
-	parser.add_argument("--policy_name", default="Trust_DDPG")			# Policy name
-	parser.add_argument("--env_name", default="HalfCheetah-v1")			# OpenAI gym environment name
-	parser.add_argument("--seed", default=0, type=int)					# Sets Gym, PyTorch and Numpy seeds
-	parser.add_argument("--start_timesteps", default=1e4, type=int)		# How many time steps purely random policy is run for
-	parser.add_argument("--eval_freq", default=5e3, type=float)			# How often (time steps) we evaluate
-	parser.add_argument("--max_timesteps", default=1e6, type=float)		# Max time steps to run environment for
-	parser.add_argument("--save_models", action="store_true")			# Whether or not models are saved
-	parser.add_argument("--expl_noise", default=0.1, type=float)		# Std of Gaussian exploration noise
-	parser.add_argument("--batch_size", default=100, type=int)			# Batch size for both actor and critic
-	parser.add_argument("--discount", default=0.99, type=float)			# Discount factor
-	parser.add_argument("--tau", default=0.005, type=float)				# Target network update rate
-	parser.add_argument("--policy_noise", default=0.2, type=float)		# Noise added to target policy during critic update
-	parser.add_argument("--noise_clip", default=0.5, type=float)		# Range to clip target policy noise
-	parser.add_argument("--policy_freq", default=2, type=int)			# Frequency of delayed policy updates
-	parser.add_argument("--lambda_critic", default = 0.1, type=float) 	# Lambda trade-off for critic regularizer
-	parser.add_argument("--lambda_actor", default = 0.1, type=float)	# Lambda trade-off for actor regularizer
+	args = utils.get_parser().parse_args()
 
-	args = parser.parse_args()
+	policy_name = args.policy_name
+	env_name = args.env_name
+	seed = args.seed
+	start_timesteps = args.start_timesteps
+	eval_freq = args.eval_freq
+	max_timesteps = args.max_timesteps
+	save_models = args.save_models
+	expl_noise = args.expl_noise
+	batch_size = args.batch_size
+	discount = args.discount
+	tau = args.tau
+	lambda_critic = args.lambda_critic
+	lambda_actor = args.lambda_actor
 
-	file_name = "%s_%s_%s_%s_%s" % (args.policy_name, args.env_name, args.lambda_critic, args.lambda_actor, str(args.seed))
-	# error_values = "%s_%s_%s_%s_%s" % (args.policy_name, args.env_name, args.lambda_critic, args.lambda_actor, str(args.seed))
+	file_name = "%s_%s_%s_%s_%s" % (policy_name, env_name, lambda_critic, lambda_actor, str(seed))
+
 	print ("---------------------------------------")
 	print ("Settings: %s" % (file_name))
 	print ("---------------------------------------")
@@ -65,25 +59,26 @@ if __name__ == "__main__":
 		os.makedirs("./results")
 	if not os.path.exists("./results_error_values"):
 		os.makedirs("./results_error_values")
-	if args.save_models and not os.path.exists("./pytorch_models"):
+	if save_models and not os.path.exists("./pytorch_models"):
 		os.makedirs("./pytorch_models")
 
 
-	env = gym.make(args.env_name)
+	env = gym.make(env_name)
 
 	# Set seeds
-	env.seed(args.seed)
-	torch.manual_seed(args.seed)
-	np.random.seed(args.seed)
+	env.seed(seed)
+	torch.manual_seed(seed)
+	np.random.seed(seed)
 	
 	state_dim = env.observation_space.shape[0]
 	action_dim = env.action_space.shape[0] 
 	max_action = int(env.action_space.high[0])
 
 	# Initialize policy
-	if args.policy_name == "DDPG": policy = DDPG.DDPG(state_dim, action_dim, max_action)
-	elif args.policy_name == "Trust_DDPG": policy = Trust_DDPG.DDPG(state_dim, action_dim, max_action)
-	elif args.policy_name == "Trust_DDPG_Adaptive": policy = Trust_DDPG.DDPG(state_dim, action_dim, max_action)
+	if policy_name == "DDPG": policy = DDPG.DDPG(state_dim, action_dim, max_action)
+	elif policy_name == "Trust_DDPG": policy = Trust_DDPG.DDPG(state_dim, action_dim, max_action)
+	elif policy_name == "Trust_DDPG_Adaptive": policy = Trust_DDPG.DDPG(state_dim, action_dim, max_action)
+	elif policy_name == "Trust_Ensemble_DDPG": policy = Trust_Ensemble_DDPG.DDPG(state_dim, action_dim, max_action)
 
 	replay_buffer = utils.ReplayBuffer()
 	
@@ -103,19 +98,20 @@ if __name__ == "__main__":
 	loss_actor = np.array([])
 
 
-	while total_timesteps < args.max_timesteps:
+	while total_timesteps < max_timesteps:
 		
 		if done: 
 
 			if total_timesteps != 0: 
 				print(("Total T: %d Episode Num: %d Episode T: %d Reward: %f") % (total_timesteps, episode_num, episode_timesteps, episode_reward))
-				if args.policy_name == "DDPG":
-					policy.train(replay_buffer, episode_timesteps, args.batch_size, args.discount, args.tau)
-				elif args.policy_name == "Trust_DDPG":
-					lcr, lcm, lc, lar, lao, la = policy.train(replay_buffer, episode_timesteps, args.batch_size, args.discount, args.tau, args.lambda_critic, args.lambda_actor)
-				elif args.policy_name == "Trust_DDPG_Adaptive":
-					lcr, lcm, lc, lar, lao, la = policy.train_with_adaptive_lambda(replay_buffer, episode_timesteps, args.batch_size, args.discount, args.tau, args.lambda_critic, args.lambda_actor)
-
+				if policy_name == "DDPG":
+					policy.train(replay_buffer, episode_timesteps, batch_size, discount, tau)
+				elif policy_name == "Trust_DDPG":
+					lcr, lcm, lc, lar, lao, la = policy.train(replay_buffer, episode_timesteps, batch_size, discount, tau, lambda_critic, lambda_actor)
+				elif policy_name == "Trust_DDPG_Adaptive":
+					lcr, lcm, lc, lar, lao, la = policy.train_with_adaptive_lambda(replay_buffer, episode_timesteps, batch_size, discount, tau, lambda_critic, lambda_actor)
+				elif policy_name == "Trust_Ensemble_DDPG":
+					lcr, lcm, lc, lar, lao, la = policy.train(replay_buffer, episode_timesteps, batch_size, discount, tau, lambda_critic, lambda_actor)
 
 					loss_critic_regularizer = np.append(loss_critic_regularizer, lcr, axis=0)
 					loss_critic_mse = np.append(loss_critic_mse, lcm, axis=0)
@@ -126,11 +122,11 @@ if __name__ == "__main__":
 
 
 			# Evaluate episode
-			if timesteps_since_eval >= args.eval_freq:
-				timesteps_since_eval %= args.eval_freq
+			if timesteps_since_eval >= eval_freq:
+				timesteps_since_eval %= eval_freq
 				evaluations.append(evaluate_policy(policy))
 				
-				if args.save_models: policy.save("%s" % (file_name), directory="./pytorch_models")
+				if save_models: policy.save("%s" % (file_name), directory="./pytorch_models")
 				np.save("./results/%s" % (file_name), evaluations) 
 			
 			# Reset environment
@@ -141,12 +137,12 @@ if __name__ == "__main__":
 			episode_num += 1 
 		
 		# Select action randomly or according to policy
-		if total_timesteps < args.start_timesteps:
+		if total_timesteps < start_timesteps:
 			action = env.action_space.sample()
 		else:
 			action = policy.select_action(np.array(obs))
-			if args.expl_noise != 0: 
-				action = (action + np.random.normal(0, args.expl_noise, size=env.action_space.shape[0])).clip(env.action_space.low, env.action_space.high)
+			if expl_noise != 0: 
+				action = (action + np.random.normal(0, expl_noise, size=env.action_space.shape[0])).clip(env.action_space.low, env.action_space.high)
 
 
 		# Perform action
@@ -166,7 +162,7 @@ if __name__ == "__main__":
 		
 	# Final evaluation 
 	evaluations.append(evaluate_policy(policy))
-	if args.save_models: policy.save("%s" % (file_name), directory="./pytorch_models")
+	if save_models: policy.save("%s" % (file_name), directory="./pytorch_models")
 	np.save("./results/%s" % (file_name), evaluations)
 	np.save("./results_error_values/" + "lcr_" + "%s" % (file_name), loss_critic_regularizer)
 	np.save("./results_error_values/" + "lcm_" + "%s" % (file_name), loss_critic_mse)
