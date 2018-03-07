@@ -46,12 +46,19 @@ class Critic(nn.Module):
 		self.l1 = nn.Linear(state_dim, 400)
 		self.l2 = nn.Linear(400 + action_dim, 300)
 		self.l3 = nn.Linear(300, 1)
+		self.d1 = nn.Dropout(p=0.2)
+		self.d2 = nn.Dropout(p=0.2)
 
 
-	def forward(self, x, u):
-		x = F.relu(self.l1(x))
-		x = F.relu(self.l2(torch.cat([x, u], 1)))
-		x = self.l3(x)
+	def forward(self, x, u, use_dropout=False):
+    	if use_dropout:
+			x = self.d1(F.relu(self.l1(x)))
+			x = self.d2(F.relu(self.l2(torch.cat([x, u], 1))))
+			x = self.l3(x)
+		else:
+    		x = F.relu(self.l1(x))
+			x = F.relu(self.l2(torch.cat([x, u], 1)))
+			x = self.l3(x)
 		return x 
 
 
@@ -81,85 +88,81 @@ class DDPG(object):
 		state = var(torch.FloatTensor(state.reshape(-1, self.state_dim)), volatile=True)
 		return self.actor(state).cpu().data.numpy().flatten()
 
+	def critic_retrain(self, replay_buffer, iterations, batch_size, discount, tau, lambda_critic, retrain_n=5):
+    		
+			for r in range(retrain_n):
+				x, y, u, r, d = replay_buffer.sample(batch_size)
+				state = var(torch.FloatTensor(x))
+				action = var(torch.FloatTensor(u))
+				next_state = var(torch.FloatTensor(y), volatile=True)
+				done = var(torch.FloatTensor(1 - d))
+				reward = var(torch.FloatTensor(r))
+
+				target_Q = self.critic_target(next_state, self.actor_target(next_state))
+				target_Q = reward + (done * discount * target_Q)
+				target_Q.volatile = False 				
+
+				current_Q = self.critic(state, action, use_dropout=True)
+				critic_mse = self.criterion(current_Q, target_Q)
+
+				target_Q_current_state = self.critic_target(state, self.actor(state))
+				target_Q_current_state = Variable(target_Q_current_state.data)
+				target_Q_current_state.volatile = False
+
+				critic_regularizer = self.criterion(current_Q, target_Q_current_state)
+				critic_loss = critic_mse + lambda_critic * critic_regularizer
+	
+				self.critic_optimizer.zero_grad()
+				critic_loss.backward()
+				self.critic_optimizer.step()
+
+				loss_critic_regularizer = critic_regularizer.data.cpu().numpy()
+				loss_critic_mse = critic_mse.data.cpu().numpy()
+				loss_critic = critic_loss.data.cpu().numpy()
+
+			return loss_critic_regularizer, loss_critic_mse, loss_critic
+
+
+	def actor_update(self, replay_buffer, iterations, batch_size, discount, tau, lambda_actor):
+    		
+		x, y, u, r, d = replay_buffer.sample(batch_size)
+		state = var(torch.FloatTensor(x))
+		action = var(torch.FloatTensor(u))
+		next_state = var(torch.FloatTensor(y), volatile=True)
+		done = var(torch.FloatTensor(1 - d))
+		reward = var(torch.FloatTensor(r))
+
+		target_actor = self.actor_target(state)
+		target_actor = Variable(target_actor.data)
+		target_actor.volatile = False
+		current_actor = self.actor(state)
+
+		actor_regularizer = self.criterion(current_actor, target_actor)
+		actor_original_loss = -self.critic(state, self.actor(state)).mean()			
+
+		# Compute actor total loss
+		actor_loss = actor_original_loss + lambda_actor * actor_regularizer
+
+		self.actor_optimizer.zero_grad()
+		actor_loss.backward()
+		self.actor_optimizer.step()
+
+		## For analysing actor regularisation
+		loss_actor_original = actor_original_loss.data.cpu().numpy()
+		loss_actor_regularizer = actor_regularizer.data.cpu().numpy()
+		loss_actor = actor_loss.data.cpu().numpy()
+
+		return loss_actor_regularizer, loss_actor_original, loss_actor
+
+		
 
 	def train(self, replay_buffer, iterations, batch_size=64, discount=0.99, tau=0.001, lambda_critic=0.1, lambda_actor=0.1):
 
 		for it in range(iterations):
 
-			# Sample replay buffer 
-			x, y, u, r, d = replay_buffer.sample(batch_size)
-			state = var(torch.FloatTensor(x))
-			action = var(torch.FloatTensor(u))
-			next_state = var(torch.FloatTensor(y), volatile=True)
-			done = var(torch.FloatTensor(1 - d))
-			reward = var(torch.FloatTensor(r))
+			loss_critic_regularizer, loss_critic_mse, loss_critic = self.critic_retrain(replay_buffer, iterations, batch_size, discount, tau, lambda_critic)
+			loss_actor_regularizer, loss_actor_original, loss_actor = self.actor_update(replay_buffer, iterations, batch_size, discount, tau, lambda_actor)
 
-			"""
-			Critic update - Critic Ensembles
-			"""
-			# Q target = reward + discount * Q(next_state, pi(next_state))
-			target_Q = self.critic_target(next_state, self.actor_target(next_state))
-			#target_Q.volatile = False 
-			target_Q = reward + (done * discount * target_Q)
-			target_Q.volatile = False 
-
-			# Get current Q estimate
-			current_Q = self.critic(state, action)
-			critic_mse = self.criterion(current_Q, target_Q)
-
-			target_Q_current_state = self.critic_target(state, self.actor(state))
-			target_Q_current_state = Variable(target_Q_current_state.data)
-			target_Q_current_state.volatile = False
-
-			critic_regularizer = self.criterion(current_Q, target_Q_current_state)
-
-			for c in range(5):
-				## Need to use different batch samples here...
-				# Compute critic total loss
-				critic_loss = critic_mse + lambda_critic * critic_regularizer
-				print ("Training critic")
-				print ("Critic Loss", critic_loss)
-
-			## Combine the gradient information for the critic parameters
-			## 
-
-
-			# Optimize the critic
-			self.critic_optimizer.zero_grad()
-			critic_loss.backward()
-			self.critic_optimizer.step()
-
-			##for analysing regularisation
-			loss_critic_regularizer = critic_regularizer.data.cpu().numpy()
-			loss_critic_mse = critic_mse.data.cpu().numpy()
-			loss_critic = critic_loss.data.cpu().numpy()
-
-
-
-			import pdb; pdb.set_trace()
-
-			"""
-			Actor update
-			"""
-			target_actor = self.actor_target(state)
-			target_actor = Variable(target_actor.data)
-			target_actor.volatile = False
-			current_actor = self.actor(state)
-
-			actor_regularizer = self.criterion(current_actor, target_actor)
-			actor_original_loss = -self.critic(state, self.actor(state)).mean()			
-
-			# Compute actor total loss
-			actor_loss = actor_original_loss + lambda_actor * actor_regularizer
-
-			self.actor_optimizer.zero_grad()
-			actor_loss.backward()
-			self.actor_optimizer.step()
-
-			## For analysing actor regularisation
-			loss_actor_original = actor_original_loss.data.cpu().numpy()
-			loss_actor_regularizer = actor_regularizer.data.cpu().numpy()
-			loss_actor = actor_loss.data.cpu().numpy()
 
 			# Update the frozen target models
 			for param, target_param in zip(self.critic.parameters(), self.critic_target.parameters()):
