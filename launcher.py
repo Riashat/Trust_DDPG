@@ -36,6 +36,7 @@ parser.add_argument('--policy_freq', default=2, type=int)           # Frequency 
 parser.add_argument('--lambda_critic', default = 0.1, type=float)   # Lambda trade-off for critic regularizer
 parser.add_argument('--lambda_actor', default = 0.1, type=float)    # Lambda trade-off for actor regularizer
 parser.add_argument('-gpu',  type=str, default='0', help=['specify GPU'])
+parser.add_argument('-f', type=str, default="./results/")          # Folder to save results in
 
 locals().update(parser.parse_args().__dict__)    
 
@@ -48,7 +49,7 @@ args = parser.parse_args()
 
 # os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
 # os.environ["CUDA_VISIBLE_DEVICES"] = args.g
-#import pdb;pdb.set_trace()
+
 experiments = args.experiments
 policy_name = args.policy
 env_name = args.env
@@ -66,8 +67,8 @@ noise_clip = args.noise_clip
 policy_freq = args.policy_freq
 lambda_critic = args.lambda_critic
 lambda_actor = args.lambda_actor
+folder = args.f
 #save_models=args.save_models
-#import pdb;pdb.set_trace()
 
 
 grid = [] 
@@ -87,7 +88,7 @@ grid += [['-noise_clip', [noise_clip]]]
 grid += [['-policy_freq', [policy_freq]]]
 grid += [['-lambda_critic', [lambda_critic]]]
 grid += [['-lambda_actor', [lambda_actor]]]
-
+grid += [['-f', [folder]]]
 
 #grid += [['-gpu', [gpu]]]
 

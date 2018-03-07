@@ -33,9 +33,6 @@ class ReplayBuffer(object):
 		return np.array(x), np.array(y), np.array(u), np.array(r).reshape(-1, 1), np.array(d).reshape(-1, 1)
 
 
-#Use this later for results creation
-create_folder = lambda f: [ os.makedirs(f) if not os.path.exists(f) else False ]
-
 def get_parser():
       parser = argparse.ArgumentParser()
 
@@ -106,4 +103,40 @@ def get_parser():
             help="""# Lambda trade-off for actor regularizer""",
             required=False, type=float, default=0.1)
 
+      named_args.add_argument('-f', '--folder',
+            help="""Folder to save data to""",
+            required=True, type=str, default='./results/')
+
       return parser
+
+
+
+
+create_folder = lambda f: [ os.makedirs(f) if not os.path.exists(f) else False ]
+class Logger(object):
+      def __init__(self, experiment_name='', folder='./results'):
+            """
+            Saves experimental metrics for use later.
+            :param experiment_name: name of the experiment
+            :param folder: location to save data
+            """
+            self.rewards = []
+            self.save_folder = os.path.join(folder, experiment_name, time.strftime('%y-%m-%d-%H-%M-%s'))
+            create_folder(self.save_folder)
+
+
+      def record_reward(self, reward):
+            self.rewards.append(reward)
+
+
+      def save(self):
+            np.save(os.path.join(self.save_folder, "rewards.npy"), self.rewards)
+
+
+      def save_args(self, args):
+            """
+            Save the command line arguments
+            """
+            with open(os.path.join(self.save_folder, 'params.json'), 'w') as f:
+                  json.dump(dict(args._get_kwargs()), f)
+

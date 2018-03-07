@@ -51,14 +51,16 @@ class Critic(nn.Module):
 
 
 	def forward(self, x, u, use_dropout=False):
-    	if use_dropout:
+		if use_dropout:
 			x = self.d1(F.relu(self.l1(x)))
 			x = self.d2(F.relu(self.l2(torch.cat([x, u], 1))))
 			x = self.l3(x)
+
 		else:
-    		x = F.relu(self.l1(x))
+			x = F.relu(self.l1(x))
 			x = F.relu(self.l2(torch.cat([x, u], 1)))
 			x = self.l3(x)
+
 		return x 
 
 

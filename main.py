@@ -9,7 +9,10 @@ import Trust_DDPG
 import Trust_Ensemble_DDPG
 import DDPG
 
-
+from utils import (
+	Logger,
+	create_folder
+)
 
 # Runs policy for X episodes and returns average reward
 def evaluate_policy(policy, eval_episodes=10):
@@ -32,7 +35,6 @@ def evaluate_policy(policy, eval_episodes=10):
 
 if __name__ == "__main__":
 	
-
 	args = utils.get_parser().parse_args()
 
 	policy_name = args.policy_name
@@ -51,14 +53,20 @@ if __name__ == "__main__":
 
 	file_name = "%s_%s_%s_%s_%s" % (policy_name, env_name, lambda_critic, lambda_actor, str(seed))
 
+	print('POLICY: ',args.policy_name)
+	# logger to record experiments
+	logger = Logger(experiment_name = args.policy_name, folder = args.folder)
+	logger.save_args(args)
+	print ('Saving to', logger.save_folder)
+
 	print ("---------------------------------------")
 	print ("Settings: %s" % (file_name))
 	print ("---------------------------------------")
 
 	if not os.path.exists("./results"):
 		os.makedirs("./results")
-	if not os.path.exists("./results_error_values"):
-		os.makedirs("./results_error_values")
+	# if not os.path.exists("./results_error_values"):
+	# 	os.makedirs("./results_error_values")
 	if save_models and not os.path.exists("./pytorch_models"):
 		os.makedirs("./pytorch_models")
 
@@ -113,12 +121,12 @@ if __name__ == "__main__":
 				elif policy_name == "Trust_Ensemble_DDPG":
 					lcr, lcm, lc, lar, lao, la = policy.train(replay_buffer, episode_timesteps, batch_size, discount, tau, lambda_critic, lambda_actor)
 
-					loss_critic_regularizer = np.append(loss_critic_regularizer, lcr, axis=0)
-					loss_critic_mse = np.append(loss_critic_mse, lcm, axis=0)
-					loss_critic = np.append(loss_critic, lc, axis=0)
-					loss_actor_regularizer = np.append(loss_actor_regularizer, lar, axis=0)
-					loss_actor_original = np.append(loss_actor_original, lao, axis=0)
-					loss_actor = np.append(loss_actor, la, axis=0)
+					# loss_critic_regularizer = np.append(loss_critic_regularizer, lcr, axis=0)
+					# loss_critic_mse = np.append(loss_critic_mse, lcm, axis=0)
+					# loss_critic = np.append(loss_critic, lc, axis=0)
+					# loss_actor_regularizer = np.append(loss_actor_regularizer, lar, axis=0)
+					# loss_actor_original = np.append(loss_actor_original, lao, axis=0)
+					# loss_actor = np.append(loss_actor, la, axis=0)
 
 
 			# Evaluate episode
@@ -126,8 +134,9 @@ if __name__ == "__main__":
 				timesteps_since_eval %= eval_freq
 				evaluations.append(evaluate_policy(policy))
 				
-				if save_models: policy.save("%s" % (file_name), directory="./pytorch_models")
-				np.save("./results/%s" % (file_name), evaluations) 
+				logger.record_reward(evaluations)
+				# if save_models: policy.save("%s" % (file_name), directory="./pytorch_models")
+				# np.save("./results/%s" % (file_name), evaluations) 
 			
 			# Reset environment
 			obs = env.reset()
@@ -162,12 +171,15 @@ if __name__ == "__main__":
 		
 	# Final evaluation 
 	evaluations.append(evaluate_policy(policy))
-	if save_models: policy.save("%s" % (file_name), directory="./pytorch_models")
-	np.save("./results/%s" % (file_name), evaluations)
-	np.save("./results_error_values/" + "lcr_" + "%s" % (file_name), loss_critic_regularizer)
-	np.save("./results_error_values/" + "lcm_" + "%s" % (file_name), loss_critic_mse)
-	np.save("./results_error_values/" + "lc_" + "%s" % (file_name), loss_critic)
-	np.save("./results_error_values/" + "lar_" + "%s" % (file_name), loss_actor_regularizer)
-	np.save("./results_error_values/" + "lao_" + "%s" % (file_name), loss_actor_original)
-	np.save("./results_error_values/" + "la_" + "%s" % (file_name), loss_actor)
+	logger.record_reward(evaluations)
+	# if save_models: policy.save("%s" % (file_name), directory="./pytorch_models")
+	# np.save("./results/%s" % (file_name), evaluations)
+	# np.save("./results_error_values/" + "lcr_" + "%s" % (file_name), loss_critic_regularizer)
+	# np.save("./results_error_values/" + "lcm_" + "%s" % (file_name), loss_critic_mse)
+	# np.save("./results_error_values/" + "lc_" + "%s" % (file_name), loss_critic)
+	# np.save("./results_error_values/" + "lar_" + "%s" % (file_name), loss_actor_regularizer)
+	# np.save("./results_error_values/" + "lao_" + "%s" % (file_name), loss_actor_original)
+	# np.save("./results_error_values/" + "la_" + "%s" % (file_name), loss_actor)
 
+logger.save()
+print ('DONE')
