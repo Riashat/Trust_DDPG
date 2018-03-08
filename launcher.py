@@ -35,7 +35,7 @@ parser.add_argument('--noise_clip', default=0.5, type=float)        # Range to c
 parser.add_argument('--policy_freq', default=2, type=int)           # Frequency of delayed policy updates
 parser.add_argument('--lambda_critic', default = 0.1, type=float)   # Lambda trade-off for critic regularizer
 parser.add_argument('--lambda_actor', default = 0.1, type=float)    # Lambda trade-off for actor regularizer
-parser.add_argument('-gpu',  type=str, default='0', help=['specify GPU'])
+parser.add_argument('-g',  type=str, default='0', help=['specify GPU'])
 parser.add_argument('-f', type=str, default="./results/")          # Folder to save results in
 
 locals().update(parser.parse_args().__dict__)    

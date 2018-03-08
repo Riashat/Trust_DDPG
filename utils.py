@@ -114,14 +114,14 @@ def get_parser():
 
 create_folder = lambda f: [ os.makedirs(f) if not os.path.exists(f) else False ]
 class Logger(object):
-      def __init__(self, experiment_name='', folder='./results'):
+      def __init__(self, experiment_name='', lambda_values = '', folder='./results' ):
             """
             Saves experimental metrics for use later.
             :param experiment_name: name of the experiment
             :param folder: location to save data
             """
             self.rewards = []
-            self.save_folder = os.path.join(folder, experiment_name, time.strftime('%y-%m-%d-%H-%M-%s'))
+            self.save_folder = os.path.join(folder, experiment_name, lambda_values, time.strftime('%y-%m-%d-%H-%M-%s'))
             create_folder(self.save_folder)
 
 

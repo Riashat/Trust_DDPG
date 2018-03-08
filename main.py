@@ -55,7 +55,7 @@ if __name__ == "__main__":
 
 	print('POLICY: ',args.policy_name)
 	# logger to record experiments
-	logger = Logger(experiment_name = args.policy_name, folder = args.folder)
+	logger = Logger(experiment_name = args.policy_name, lambda_values = 'Lambda_' + str(args.lambda_actor) + '_' + str(args.lambda_critic),  folder = args.folder)
 	logger.save_args(args)
 	print ('Saving to', logger.save_folder)
 
