@@ -74,10 +74,14 @@ if __name__ == "__main__":
 	env = gym.make(env_name)
 
 	# Set seeds
+	seed = np.random.randint(1,1000)
 	env.seed(seed)
 	torch.manual_seed(seed)
 	np.random.seed(seed)
-	
+	# seed = np.random.seed
+	# env.seed(seed)
+	# torch.manual_seed(seed)
+
 	state_dim = env.observation_space.shape[0]
 	action_dim = env.action_space.shape[0] 
 	max_action = int(env.action_space.high[0])
@@ -121,23 +125,15 @@ if __name__ == "__main__":
 				elif policy_name == "Trust_Ensemble_DDPG":
 					lcr, lcm, lc, lar, lao, la = policy.train(replay_buffer, episode_timesteps, batch_size, discount, tau, lambda_critic, lambda_actor)
 
-					# loss_critic_regularizer = np.append(loss_critic_regularizer, lcr, axis=0)
-					# loss_critic_mse = np.append(loss_critic_mse, lcm, axis=0)
-					# loss_critic = np.append(loss_critic, lc, axis=0)
-					# loss_actor_regularizer = np.append(loss_actor_regularizer, lar, axis=0)
-					# loss_actor_original = np.append(loss_actor_original, lao, axis=0)
-					# loss_actor = np.append(loss_actor, la, axis=0)
-
+				logger.record_data(lcr, lcm, lc, lar, lao, la)
 
 			# Evaluate episode
 			if timesteps_since_eval >= eval_freq:
 				timesteps_since_eval %= eval_freq
-				evaluations.append(evaluate_policy(policy))
-				
+				evaluations.append(evaluate_policy(policy))				
 				logger.record_reward(evaluations)
-				# if save_models: policy.save("%s" % (file_name), directory="./pytorch_models")
-				# np.save("./results/%s" % (file_name), evaluations) 
-			
+
+
 			# Reset environment
 			obs = env.reset()
 			done = False
@@ -172,6 +168,7 @@ if __name__ == "__main__":
 	# Final evaluation 
 	evaluations.append(evaluate_policy(policy))
 	logger.record_reward(evaluations)
+
 	# if save_models: policy.save("%s" % (file_name), directory="./pytorch_models")
 	# np.save("./results/%s" % (file_name), evaluations)
 	# np.save("./results_error_values/" + "lcr_" + "%s" % (file_name), loss_critic_regularizer)

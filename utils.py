@@ -121,16 +121,38 @@ class Logger(object):
             :param folder: location to save data
             """
             self.rewards = []
+            self.loss_critic_regularizer = []
+            self.loss_critic_mse = []
+            self.loss_critic = []
+            self.loss_actor_regularizer = []
+            self.loss_actor_original = []
+            self.loss_actor = []
+
+
             self.save_folder = os.path.join(folder, experiment_name, lambda_values, time.strftime('%y-%m-%d-%H-%M-%s'))
             create_folder(self.save_folder)
 
 
-      def record_reward(self, reward):
-            self.rewards.append(reward)
+      def record_reward(self, reward_return):
+            self.returns_eval = reward_return
 
+      def record_data(self, loss_critic_regularizer, loss_critic_mse, loss_critic, loss_actor_regularizer, loss_actor_original, loss_actor):
+            self.loss_critic_regularizer.append(loss_critic_regularizer)
+            self.loss_critic_mse.append(loss_critic_mse)
+            self.loss_critic.append(loss_critic)
+            self.loss_actor_regularizer.append(loss_actor_regularizer)
+            self.loss_actor_original.append(loss_actor_original)
+            self.loss_actor.append(loss_actor)
 
       def save(self):
-            np.save(os.path.join(self.save_folder, "rewards.npy"), self.rewards)
+            np.save(os.path.join(self.save_folder, "returns_eval.npy"), self.returns_eval)
+            np.save(os.path.join(self.save_folder, "loss_critic_regularizer.npy"), self.loss_critic_regularizer)
+            np.save(os.path.join(self.save_folder, "loss_critic_mse.npy"), self.loss_critic_mse)
+            np.save(os.path.join(self.save_folder, "loss_critic.npy"), self.loss_critic)
+            np.save(os.path.join(self.save_folder, "loss_actor_regularizer.npy"), self.loss_actor_regularizer)
+            np.save(os.path.join(self.save_folder, "loss_actor_original.npy"), self.loss_actor_original)
+            np.save(os.path.join(self.save_folder, "loss_actor.npy"), self.loss_actor)
+
 
 
       def save_args(self, args):

@@ -102,11 +102,15 @@ class DDPG(object):
 			critic_mse = self.criterion(current_Q, target_Q)
 
 			# target_Q_current_state = Variable(target_Q.data, requires_grad = True)
-			target_Q_current_state = self.critic_target(state, self.actor(state))
-			target_Q_current_state = Variable(target_Q_current_state.data)
-			target_Q_current_state.volatile = False
+			target_Q_current_actor = self.critic_target(state, self.actor(state))
+			target_Q_current_actor = Variable(target_Q_current_actor.data)
+			target_Q_current_actor.volatile = False
 
-			critic_regularizer = self.criterion(current_Q, target_Q_current_state)
+			target_Q_target_actor = self.critic_target(state, self.actor_target(state))
+			target_Q_target_actor = Variable(target_Q_target_actor.data)
+			target_Q_target_actor.volatile = False
+
+			critic_regularizer = self.criterion(target_Q_target_actor, target_Q_current_actor)
 
 			# Compute critic total loss
 			critic_loss = critic_mse + lambda_critic * critic_regularizer
