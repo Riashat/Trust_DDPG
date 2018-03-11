@@ -18,7 +18,7 @@ def grid_search(args_vals):
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--experiments', type=int, default=3)
+parser.add_argument('--experiments', type=int, default=5)
 parser.add_argument('--policy', type=str, default="Trust_DDPG")          # Policy name
 parser.add_argument('--env', type=str, default="HalfCheetah-v1")         # OpenAI gym environment name
 parser.add_argument('--seed', default=0, type=int)                  # Sets Gym, PyTorch and Numpy seeds

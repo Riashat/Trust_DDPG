@@ -1,0 +1,1 @@
+{"discount": 0.99, "save_models": true, "policy_freq": 2, "noise_clip": 0.5, "lambda_actor": 600.0, "tau": 0.005, "policy_name": "Trust_DDPG", "expl_noise": 0.1, "batch_size": 100, "start_timesteps": 10000, "env_name": "HalfCheetah-v1", "eval_freq": 5000.0, "lambda_critic": 0.0, "seed": 0, "folder": "./results_actor_only", "max_timesteps": 1000000.0, "policy_noise": 0.2}
