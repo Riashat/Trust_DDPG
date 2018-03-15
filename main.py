@@ -51,11 +51,11 @@ if __name__ == "__main__":
 	lambda_critic = args.lambda_critic
 	lambda_actor = args.lambda_actor
 
-	file_name = "%s_%s_%s_%s_%s" % (policy_name, env_name, lambda_critic, lambda_actor, str(seed))
+	file_name = "%s_%s_%s_%s_%s" % (policy_name, env_name, lambda_actor, lambda_critic, str(seed))
 
 	print('POLICY: ',args.policy_name)
 	# logger to record experiments
-	logger = Logger(experiment_name = args.policy_name, lambda_values = 'Lambda_' + str(args.lambda_actor) + '_' + str(args.lambda_critic),  folder = args.folder)
+	logger = Logger(experiment_name = args.policy_name, environment_name = args.env_name, lambda_values = 'Lambda_' + str(args.lambda_actor) + '_' + str(args.lambda_critic),  folder = args.folder)
 	logger.save_args(args)
 	print ('Saving to', logger.save_folder)
 
