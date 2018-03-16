@@ -1,0 +1,1 @@
+{"seed": 0, "lambda_actor": 100.0, "policy_freq": 2, "eval_freq": 5000.0, "noise_clip": 0.5, "folder": "./all_results", "tau": 0.005, "expl_noise": 0.1, "policy_noise": 0.2, "batch_size": 100, "start_timesteps": 10000, "max_timesteps": 1000000.0, "policy_name": "Trust_DDPG", "discount": 0.99, "lambda_critic": 40.0, "save_models": true, "env_name": "Walker2d-v1"}
