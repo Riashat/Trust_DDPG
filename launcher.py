@@ -21,7 +21,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--experiments', type=int, default=5)
 parser.add_argument('--policy', type=str, default="Trust_DDPG")          # Policy name
 parser.add_argument('--env', type=str, default="HalfCheetah-v1")         # OpenAI gym environment name
-parser.add_argument('--seed', default=0, type=int)                  # Sets Gym, PyTorch and Numpy seeds
+#parser.add_argument('--seed', default=0, type=int)                  # Sets Gym, PyTorch and Numpy seeds
 parser.add_argument('--start_timesteps', default=10000, type=int)     # How many time steps purely random policy is run for
 parser.add_argument('--eval_freq', default=5e3, type=float)         # How often (time steps) we evaluate
 parser.add_argument('--max_timesteps', default=1e6, type=float)     # Max time steps to run environment for
